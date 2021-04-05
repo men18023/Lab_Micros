@@ -1,5 +1,5 @@
 ;;**************************
-; Proyecto 01 - Sem·foro de 3 vÌas
+; Proyecto 01 - Sem√°foro de 3 v√≠as
 ;**************************
 ; Archivo:	Proyecto1.s
 ; Dispositivo:	PIC16F887
@@ -261,7 +261,7 @@ int_TMR1:
     reinicio_tmr1  ;50ms
     incf    contador
     movwf   contador, W
-    sublw   2	    ;500ms * 2 = 1s
+    sublw   5	    ;500ms * 2 = 1s
     btfss   ZERO
     goto    return_tm1
     clrf    contador	
@@ -636,17 +636,17 @@ delay:
 delay2:
     movlw   130		    
     movwf   cont_small
-    call    delay3
+    ;call    delay3
     decfsz  cont_small, 1   
-    goto    $-2		    
+    goto    $-1		    
     return
 
-delay3:
-    movlw   1
-    movwf   cont_nano
-    decfsz  cont_nano, 1
-    goto    $-1
-    return
+;delay3:
+ ;   movlw   1
+  ;  movwf   cont_nano
+   ; decfsz  cont_nano, 1
+    ;goto    $-1
+    ;return
 ;-------------------------------------------------------;
     
 division1:
