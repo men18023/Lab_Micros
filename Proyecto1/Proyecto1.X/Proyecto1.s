@@ -5,7 +5,6 @@
 ; Dispositivo:	PIC16F887
 ; Autor:       Jonathan Menendez, 18023
 ; Compilador:  pic-as (v2.30), MBPLABX v5.40
-; Video: 
 ;**************************
 
 PROCESSOR 16F887
@@ -28,20 +27,20 @@ PROCESSOR 16F887
   CONFIG WRT=OFF   // Proteccion de autoescritura por el programa desactivada
   CONFIG BOR4V=BOR40V  // Reinicio abajo de 4V, (BOR21V=2.1V)
 
-MODO    EQU 0  
+MODO    EQU 0		; nombre para los pushbuttons
 UP      EQU 1
 DOWN    EQU 2
 
-  reinicio_tmr0 macro
+reinicio_tmr0 macro	; macro para reinicio del timer0
     banksel PORTA
-    movlw   253
-    movwf   TMR0    
+    movlw   255		; valor de inicio para el timer0
+    movwf   TMR0	; se mueve a nuestro TMR0
     bcf	    T0IF
-  endm
+    endm
   
-  reinicio_tmr1 macro
-    banksel TMR1H	;se llama al bank del timer1
-    movlw   225		;valor inicial que sera colocado en el tmr1
+reinicio_tmr1 macro
+    banksel TMR1H	
+    movlw   225		;valores iniciales en el tmr1
     movwf   TMR1H
     movlw   124
     movwf   TMR1L
@@ -49,8 +48,8 @@ DOWN    EQU 2
     endm
 
 PSECT udata_bank0  ;common memory
-    contador:	 DS 1
-    cont1:	 DS 1
+    contador:	 DS 1	    ; variables utilizadas
+    cont1:	 DS 1	    ; el # a la par de DS es la cantidad de bytes
     cont2:	 DS 1
     cont3:	 DS 1
     cont_big:	 DS 1
@@ -81,7 +80,7 @@ PSECT udata_bank0  ;common memory
  
  PSECT udata_shr  
     W_temp:	 DS 1 ;1 byte
-    STATUS_temp: DS 1 ;1 byte
+    STATUS_temp: DS 1
 
 PSECT resVect, class=CODE, abs, delta=2
 ;-----------vector reset--------------;
@@ -99,12 +98,12 @@ push:
     movwf   STATUS_temp
     
 isr:
-    btfsc   RBIF	    ;revisar interrupciones en el puerto B
-    call    int_PB	    ;llamada a subrutina de pushbuttons
-    btfsc   T0IF	    
-    call    int_TMR0	    ;llamada a subrutina de timer0
-    btfsc   TMR1IF
-    call    int_TMR1
+    btfsc   RBIF	    ; revisar interrupcion en el puerto B
+    call    int_PB	    ; llamada a subrutina de pushbuttons
+    btfsc   T0IF	    ; revisar interrupcion en el timer0
+    call    int_TMR0	    ; llamada a subrutina de timer0
+    btfsc   TMR1IF	    ; revisar interrupcion en timer1
+    call    int_TMR1	    ; llamada a subrutina de timer1
    
 pop:
     swapf   STATUS_temp, W
@@ -115,60 +114,60 @@ pop:
 ;----------------------sub rutinas de int--------------;
     
 int_PB:
-    banksel PORTB
-    btfss   PORTB, MODO
-    incf    estado	
-    movlw   6
-    subwf   estado, W	;
+    banksel PORTB	    ; se coloca en puerto B
+    btfss   PORTB, UP	    ; se revisa si se presiona el PB UP
+    incf    carga, F	    ; se incrementa el valor en la variable
+    movlw   21		    ; se mueve 21 a W
+    subwf   carga, W	    ; se compara el valor y poder hacer el limite
+    btfsc   ZERO
+    goto    min		    ; llamada a limite inferior
+    
+    btfss   PORTB, DOWN	    ; se revisa si se presiona el PB DOWN
+    decf    carga, F	    ; se decrement ael valor en la variable
+    movlw   9		    ; mueve 9 a W
+    subwf   carga, W	    ; se compara el valor y poder hacer el limite
+    btfsc   ZERO	    ; revisa el ZERO
+    goto    max		    ; llamada a nuestro limite superior
+    bcf	    RBIF
+    
+    btfss   PORTB, MODO	    ; se revisa si se presiona el PB MODO
+    incf    estado	    ; se incremente la variable de estado
+    movlw   6		    ; mueve 6 a W
+    subwf   estado, W	    ; comparacion para que estado no pase de 6
     btfss   ZERO	
-    goto    $+3
+    goto    $+3		    
     movlw   2
     movwf   estado
-    
-    btfss   PORTB, UP
-    incf    carga, F
-    movlw   21		
-    subwf   carga, W
-    btfsc   ZERO
-    goto    min
-    
-    btfss   PORTB, DOWN
-    decf    carga, F
-    movlw   9		
-    subwf   carga, W
-    btfsc   ZERO
-    goto    max
-    bcf	    RBIF
     return
-    
+  
 min:
-    movlw   10
+    movlw   10		; se mueve 10 a varaiable carga
     movwf   carga
-    bcf	    RBIF
+    bcf	    RBIF	; se reinicia el interrupt
     return
 max:
-    movlw   20
-    movwf   carga
-    bcf	    RBIF
+    movlw   20		; se mueve 20 a variable carga
+    movwf   carga   
+    bcf	    RBIF	; se reinicia el interrupt
     return
 
 int_TMR0:		    ;subrutina de interrupcion del tmr0
     reinicio_tmr0           
     clrf    PORTA
     
-    btfsc   banderas, 0	    ;se enciende la bandera de cada display
-    goto    display1
+    btfsc   banderas, 0	    ; se prueba la bandera de cada display
+    goto    display1	    ; va al display siguiente
     
-    btfsc   banderas, 1
+    btfsc   banderas, 1	    
     goto    display2
     
-    btfsc   banderas, 2
+    btfsc   banderas, 2	   
     goto    display3
     
-    btfsc   banderas, 3
+    btfsc   banderas, 3	    
     goto    display4
     
-    btfsc   banderas, 4	    ;se enciende la bandera de cada display
+    btfsc   banderas, 4	    
     goto    display5
     
     btfsc   banderas, 5
@@ -177,57 +176,57 @@ int_TMR0:		    ;subrutina de interrupcion del tmr0
     btfsc   banderas, 6
     goto    display7
    
-display0:			;Primer display hexa
-    movf    display_var+1, W	;se elige el byte de la varriable
+display0:			
+    movf    display_var+1, W	;se elige el byte de la variable
     movwf   PORTC		;lugar donde esta el 7seg
     bsf	    PORTA, 0		;transistor que se desea activar
     goto    siguiente_0		;llamada a instruccion siguiente
     
 display1:
-    movf    display_var, W	;Segundo display hexa
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 1		;transistor que se desea activar
+    movf    display_var, W	
+    movwf   PORTC		
+    bsf	    PORTA, 1		
     goto    siguiente_1
 
 display2:
-    movf    display_var+3, W	;Primer display decimal
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 2		;transistor que se desea activar
+    movf    display_var+3, W	
+    movwf   PORTC		
+    bsf	    PORTA, 2		
     goto    siguiente_2
     
 display3:
-    movf    display_var+2, W	;Segundo display decimal
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 3		;transistor que se desea activar
+    movf    display_var+2, W	
+    movwf   PORTC		
+    bsf	    PORTA, 3		
     goto    siguiente_3
 
 display4:
-    movf    display_var+5, W	;Tercer display decimal
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 4		;transistor que se desea activar
+    movf    display_var+5, W	
+    movwf   PORTC		
+    bsf	    PORTA, 4		
     goto    siguiente_4
 
 display5:
-    movf    display_var+4, W	;Segundo display hexa
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 5		;transistor que se desea activar
+    movf    display_var+4, W	
+    movwf   PORTC		
+    bsf	    PORTA, 5		
     goto    siguiente_5
     
 display6:
-    movf    display_var+7, W	;Primer display decimal
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 6		;transistor que se desea activar
+    movf    display_var+7, W	
+    movwf   PORTC		
+    bsf	    PORTA, 6		
     goto    siguiente6
     
 display7:
-    movf    display_var+6, W	;Segundo display decimal
-    movwf   PORTC		;lugar donde esta el 7seg
-    bsf	    PORTA, 7		;transistor que se desea activar
+    movf    display_var+6, W	
+    movwf   PORTC		
+    bsf	    PORTA, 7		
     goto    siguiente7
     
-siguiente_0:		;Intruccion de rotacion de displays 
-    movlw   00000001B
-    xorwf   banderas, 1	    ;XOR para hacer la rotacion
+siguiente_0:		    ; Intruccion de rotacion de displays 
+    movlw   00000001B	    ; se mueve valor a W
+    xorwf   banderas, 1	    ; XOR para hacer la rotacion
     return
 siguiente_1:
     movlw   00000011B
@@ -258,19 +257,19 @@ siguiente7:
     return
 
 int_TMR1: 
-    reinicio_tmr1  ;50ms
-    incf    contador
-    movwf   contador, W
-    sublw   5	    ;500ms * 2 = 1s
-    btfss   ZERO
-    goto    return_tm1
-    clrf    contador	
-    incf    tiempo	
+    reinicio_tmr1	    ; reincio del timer1 
+    incf    contador	    ; se incrementa la variable
+    movwf   contador, W	    ; se mueve a W
+    sublw   1		    ; se hace el decremento en el contador
+    btfss   ZERO	    ; se prueba ZERO esta apagado
+    goto    return_tm1	    
+    clrf    contador	    ; limpia el contador
+    incf    tiempo	    ; incrementa variable tiempo
     
-    btfss   sust, 0	
-    decf    check1		
-    btfsc   ZERO
-    bsf	    sust, 0
+    btfss   sust, 0	    ; revisa bandera de cada contador
+    decf    check1	    ; decrementa seguro de cada contador
+    btfsc   ZERO	    ; revisa el ZERO
+    bsf	    sust, 0	    ; enciende la bandera
     
     btfss   sust, 1
     decf    check2
@@ -309,17 +308,21 @@ tabla:
     retlw   01110001B  ;F
  
 main:
-    banksel ANSEL   
-    clrf    ANSEL   
+    banksel ANSEL	    ; bank de ANSEL
+    clrf    ANSEL	    ; se limpian puerto digitales
     clrf    ANSELH
     
-    banksel TRISA
-    clrf    TRISA
-    clrf    TRISC
-    clrf    TRISD
-    clrf    TRISE
-    clrf    TRISB
-    bsf	    TRISB, UP
+    banksel TRISA	    ; bank de TRISA
+    movlw   00000000B	    ; TRISA como salidas para transistores
+    movwf   TRISA
+    movlw   00000000B	    ; TRISC como salidas para 7 seg
+    movwf   TRISC
+    movlw   00000000B	    ; TRISD y TRISE salidas para semaforos
+    movwf   TRISD
+    movlw   00000000B
+    movwf   TRISE
+    clrf    TRISB	    ; salidas en todo TRISB	
+    bsf	    TRISB, UP	    ; se habilitan los PB como entradas del TRISB
     bsf	    TRISB, DOWN
     bsf	    TRISB, MODO
     
@@ -329,14 +332,14 @@ main:
     bsf	    WPUB, DOWN
     bsf	    WPUB, MODO
 
-    call    reloj
-    call    timer0 
-    call    timer1
-    call    config_ioc
-    call    int_enable
-    call    config_inicial
+    call    reloj	    ;llamada a config del reloj
+    call    timer0	    ;llamada a config del timer0
+    call    timer1	    ;llamada a config del timer1
+    call    config_ioc	    ;llamada a config de pull-ups
+    call    int_enable	    ;llamada a config de interrupciones
+    call    config_inicial  ;config inicial del sistema de semaforos
     
-    banksel PORTA   
+    banksel PORTA	    ;se limpian todas las variables y puertos a utilizar
     clrf    PORTA
     clrf    PORTC
     clrf    PORTD
@@ -349,13 +352,97 @@ main:
     clrf    c2_temp
     clrf    c3_temp
 
-;---------------------------loop------------------------;
+;-----------------------------------loop---------------------------------------;
  
 loop:
-    movf    check1, W		
-    movwf   unidad1		
-    call    division1
-    call    prep_display1
+    call    empezar		;subrutina de inicio automatico
+    call    config_semaforos	;subrutina de configuracion manual de semaforo
+    
+    goto    loop		;seguir en el loop
+    
+;------------------------------------------------------------------------------;
+;-----------------------------subrutinas generales-----------------------------; 
+;------------------------------------------------------------------------------;
+    
+reloj:
+    banksel OSCCON
+    bcf	    IRCF2   ;250 KHz = 010
+    bsf	    IRCF1
+    bcf	    IRCF0
+    bsf	    SCS	    ;reloj interno 
+    return
+ 
+config_ioc:
+    banksel TRISB	
+    bsf	    IOCB, UP	  ;se enciende el pull-up en cada PB
+    bsf	    IOCB, DOWN
+    bsf	    IOCB, MODO
+    
+    banksel PORTA
+    movf    PORTB, W	
+    bcf	    RBIF
+    return
+ 
+int_enable:
+    bsf	    GIE	    ;interrupciones globales
+    bsf	    T0IE    ;interrupcion de timer0
+    bcf	    T0IF
+    
+    bsf	    TMR1IE  ;interrupcion de timer1
+    bcf	    TMR1IF
+    
+    bsf	    RBIE    ;interrupcion de PORTB
+    bcf	    RBIF
+    return
+    
+timer0:
+    banksel TRISA
+    bcf	    T0CS     ;reloj interno
+    bcf	    PSA	     ;prescaler
+    bsf	    PS2
+    bsf	    PS1
+    bsf	    PS0      ; PS = 111   rate 1:256
+    banksel PORTA
+    reinicio_tmr0    ;se reinicia el timer0
+    return   
+    
+timer1:
+    banksel T1CON     
+    bsf	    T1CKPS1  ;prescaler de 11   rate 1:8
+    bsf	    T1CKPS0
+    bcf	    TMR1CS   ;reloj interno
+    bsf	    TMR1ON   ;se activa timer1
+    reinicio_tmr1
+    return    
+
+config_inicial:
+    movlw   10		;se mueve 10 a W
+    movwf   cont1	;se asigna como valor inicial para displays de semaforos
+    movwf   cont2
+    movwf   cont3
+    movf    cont1, W
+    movwf   check1
+    movf    cont2, W
+    movwf   check2
+    movf    cont3, W
+    movwf   check3
+    movlw   1		;se inicia en el estado 1
+    movwf   estado
+    movlw   10
+    movwf   carga	;valor inicial para el display de configuracion de sem
+    movlw   11111110B
+    movwf   sust	;valor incicial para nuestro variable
+    return
+    
+;------------------------------------------------------------------------------;
+;-----------------subrutinas de funcionamiento de semaforos--------------------; 
+;------------------------------------------------------------------------------; 
+    
+empezar:    
+    movf    check1, W	    ;se mueve el valor configurado a W	
+    movwf   unidad1	    ;mueve W a variable para utilizar en division
+    call    division1	    ;llamada a division1 
+    call    prep_display1   ;llama a su respectiva preparacion del display
     
     movf    check2, W
     movwf   unidad2
@@ -367,133 +454,76 @@ loop:
     call    division3
     call    prep_display3
     
-    btfss   tipo_sem, 0
-    call    fun_normal	
+    btfss   tipo_sem, 0	    ;prueba para inciar funcionamiento normal del sem
+    call    fun_normal	    ;llamada a subrutina de funcionamiento norm
+    return
     
-    movlw   2
-    subwf   estado, W
-    btfsc   ZERO
-    call    cambio_S1	
+fun_normal:
+    btfss   modo_sem, 0	    ;semaforo 1 en verde
+    call    verde1	
+    btfsc   modo_sem, 1	    ;semaforo 1 en amarillo
+    call    amarillo1		
+    btfsc   modo_sem, 2	    ;semaforo 2 en verde
+    call    verde2	
+    btfsc   modo_sem, 3	    ;semaforo 2 en amarillo
+    call    amarillo2	
+    btfsc   modo_sem, 4	    ;semaforo 3 en verde
+    call    verde3	
+    btfsc   modo_sem, 5	    ;semaforo 3 en amarillo
+    call    amarillo3	
+    return
     
-    movlw   3
+config_semaforos:	    ;subrutina para cambiar valor en contador de sem
+    movlw   2		    ;mueve 2 a W
+    subwf   estado, W	    ;compara el valor de W y el estado actual
+    btfsc   ZERO	
+    call    cambio_S1	    ;llama configuracion del primer semaforo
+    
+    movlw   3		    ;mueve 3 a W
     subwf   estado, W
     btfsc   ZERO
     call    cambio_S2	
     
-    movlw   4
+    movlw   4		    ;mueve 4 a W
     subwf   estado, W
     btfsc   ZERO
     call    cambio_S3	
     
-    movlw   5
+    movlw   5		    ;mueve 5 a W
     subwf   estado, W
     btfsc   ZERO
-    call    confirmacion	
-    
-    goto    loop
-    
-reloj:
-    banksel OSCCON
-    bsf	    IRCF2   ;4MHZ = 110
-    bsf	    IRCF1
-    bcf	    IRCF0
-    bsf	    SCS	    ;reloj interno 
-    return
- 
-config_ioc:
-    banksel TRISB
-    bsf	    IOCB, UP
-    bsf	    IOCB, DOWN
-    bsf	    IOCB, MODO
-    
-    banksel PORTA
-    movf    PORTB, W	
-    bcf	    RBIF
-    return
- 
-int_enable:
-    bsf	    GIE
-    bsf	    T0IE
-    bcf	    T0IF
-    
-    bsf	    TMR1IE 
-    bcf	    TMR1IF
-    
-    bsf	    RBIE
-    bcf	    RBIF
+    call    confirmacion    ;subrutina de confirmacion de configuracion de sem
     return
     
-timer0:
-    banksel TRISA
-    bcf	    T0CS       ;reloj interno
-    bcf	    PSA	       ;Prescaler
-    bsf	    PS2
-    bsf	    PS1
-    bsf	    PS0        ; PS = 111   rate 1:256
-    banksel PORTA
-    reinicio_tmr0
-    return
-    
-    
-timer1:
-    banksel T1CON     
-    bsf	    T1CKPS1    ; Prescaler de 11   rate 1:8
-    bsf	    T1CKPS0
-    bcf	    TMR1CS     ; reloj interno
-    bsf	    TMR1ON     ; Se activa timer1
-    reinicio_tmr1
-    return    
- 
-config_inicial:
-    movlw   10
-    movwf   cont1
-    movwf   cont2
-    movwf   cont3
-    movf    cont1, W
-    movwf   check1
-    movf    cont2, W
-    movwf   check2
-    movf    cont3, W
-    movwf   check3
-    movlw   1
-    movwf   estado
-    movlw   10
-    movwf   carga
-    movlw   11111110B
-    movwf   sust
-    return
-    
-;---------------------------------------------------------------------;    
- 
 verde1:
-    movlw   00000100B	;
+    movlw   00000100B	;semaforo 1 en verde
     movwf   PORTE
-    movlw   00001001B	;
+    movlw   00001001B	;semaforo 2 y 3 en rojo
     movwf   PORTD
     movwf   tiempo, W
-    addlw   5
+    addlw   5		;valor para iniciar el parpapedo
     subwf   cont1, W
     btfsc   ZERO	
-    call    parpadeo1
+    call    parpadeo1	;instruccion de parpadeo
     return
     
 amarillo1:
-    movlw   00000010B	
+    movlw   00000010B	;semaforo 1 en amarillo
     movwf   PORTE
-    movlw   00001001B
+    movlw   00001001B	;semaforo 2 y 3 en rojo
     movwf   PORTD   
-    movlw   3
-    subwf   tiempo, W
+    movlw   3		;valor para iniciar amarillo
+    subwf   tiempo, W	;compara valor de tiempo con W
     btfsc   ZERO
-    call    rojo1
+    call    rojo1	;llama instruccion de rojo en sem1
     return
     
 rojo1:
-    bcf	    modo_sem, 1	
+    bcf	    modo_sem, 1	;configuracion de banderas para siguiente semaforo
     bsf	    modo_sem, 2
-    movf    cont2, W
+    movf    cont2, W	;se mueve valor del contador al siguiente semaforo
     movwf   check2, F
-    movlw   253
+    movlw   253		;se activa el contador del siguiente semaforo
     movwf   sust
     clrf    tiempo
     return
@@ -506,7 +536,7 @@ verde2:
     movwf   tiempo, W	
     addlw   5
     subwf   cont2, W
-    btfsc   ZERO	;
+    btfsc   ZERO	
     call    parpadeo2
     return
     
@@ -563,26 +593,22 @@ rojo3:
     movwf   sust
     clrf    tiempo
     return
-
-;--------------------------------------------------------;
     
 parpadeo1:
-    bcf	    PORTE, 2
-    call    delay
-    subwf   tiempo,W
-    sublw   1
-    bsf	    PORTE, 2
-    call    delay
-    bcf	    PORTE, 2
-    call    delay
-    bsf	    PORTE, 2
-    call    delay
+    bcf	    PORTE, 2	;apaga led
+    call    delay	;tiempo apagado
+    bsf	    PORTE, 2	;enciende led
+    call    delay	;tiempo encendido
     bcf	    PORTE, 2
     call    delay
     bsf	    PORTE, 2
     call    delay
     bcf	    PORTE, 2
-    bsf	    modo_sem, 0
+    call    delay
+    bsf	    PORTE, 2
+    call    delay
+    bcf	    PORTE, 2	;deja verde apagado para seguir en amarillo1
+    bsf	    modo_sem, 0	;activa banderas de amarillo1 y apaga bandera de verde1
     bsf	    modo_sem, 1
     clrf    tiempo
     return
@@ -626,7 +652,7 @@ parpadeo3:
     return
     
 delay:
-    movlw   255		    
+    movlw   198		    ;delay utilizado para cada parpadeo
     movwf   cont_big	    
     call    delay2	   
     decfsz  cont_big, 1	   
@@ -634,30 +660,25 @@ delay:
     return
     
 delay2:
-    movlw   130		    
+    movlw   30		    
     movwf   cont_small
-    ;call    delay3
     decfsz  cont_small, 1   
     goto    $-1		    
     return
-
-;delay3:
- ;   movlw   1
-  ;  movwf   cont_nano
-   ; decfsz  cont_nano, 1
-    ;goto    $-1
-    ;return
-;-------------------------------------------------------;
     
-division1:
-    clrf    decena
-    movlw   10
-    subwf   unidad1, F
-    btfsc   CARRY	
-    incf    decena	
-    btfsc   CARRY
-    goto    $-5 
-    movlw   10
+;------------------------------------------------------------------------------;
+;---------------------------subrutinas de proceso------------------------------; 
+;------------------------------------------------------------------------------;
+    
+division1:	    
+    clrf    decena	    ;se limpia la variable
+    movlw   10		    ;valor de 10 a W
+    subwf   unidad1, F	    ;a unidad del primer semaforo se le resta W
+    btfsc   CARRY	    ;se revisa si tiene algo
+    incf    decena	    ;se incrementa decena lo que sea necesario
+    btfsc   CARRY   
+    goto    $-5		    
+    movlw   10		    ;se agrega el valor a nuestra variable de unidad
     addwf   unidad1, F
     return
 
@@ -737,10 +758,14 @@ prep_display4:
     movwf   display_var+7
     return
 
-;---------------------------------------------------------------------;    
+    
+;------------------------------------------------------------------------------;
+;-----------------------subrutinas de config de semaforo------------------------; 
+;------------------------------------------------------------------------------;
+    
 confirmar:
-    decf    carga	    ;
-    movf    c1_temp, W
+    decf    carga	    ;decrementa el valor en display de config
+    movf    c1_temp, W	    ;se mueven los nuevos valores a cada contador
     movwf   cont1, F
     movwf   check1
     movf    c2_temp, W
@@ -749,12 +774,12 @@ confirmar:
     movf    c3_temp, W
     movwf   cont3, F
     movwf   check3
-    movlw   00000001B
+    movlw   00000001B	    ;se reinicia el funcionamiento 
     movwf   estado
-    bcf	    tipo_sem, 0	;
-    movlw   0000110B
+    bcf	    tipo_sem, 0	    ;se apaga la bandera   
+    movlw   0000110B	    ;valor para bandera
     movwf   sust
-    clrf    modo_sem
+    clrf    modo_sem	    ;se limpian las variables, leds y displays de config
     clrf    tiempo
     clrf    PORTB
     clrf    display_var+7
@@ -780,21 +805,6 @@ rechazar:
     clrf    display_var+7
     clrf    display_var+6
     return
-    
-fun_normal:
-    btfss   modo_sem, 0 
-    call    verde1	
-    btfsc   modo_sem, 1 
-    call    amarillo1		
-    btfsc   modo_sem, 2 
-    call    verde2	
-    btfsc   modo_sem, 3 
-    call    amarillo2	
-    btfsc   modo_sem, 4 
-    call    verde3	
-    btfsc   modo_sem, 5 
-    call    amarillo3	
-    return
 	
 cambio_S1:
     bsf	    PORTB, 3
@@ -808,6 +818,7 @@ cambio_S1:
     call    division1
     call    division4
     call    prep_display4
+    clrf    unidad4
     return
     
 cambio_S2:
@@ -852,4 +863,5 @@ confirmacion:
     btfss   PORTB, DOWN
     call    rechazar
     return
+
 END
