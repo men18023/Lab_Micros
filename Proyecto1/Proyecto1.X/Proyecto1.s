@@ -807,18 +807,18 @@ rechazar:
     return
 	
 cambio_S1:
-    bsf	    PORTB, 3
+    bsf	    PORTB, 3	    ;encender el led del semaforo a editar
     bcf	    PORTB, 4
     bcf	    PORTB, 5
-    movf    carga, W
-    movwf   c1_temp	
-    movf    c1_temp, W
-    movwf   unidad1
+    movf    carga, W	    ;mover el valor de carga del display a W
+    movwf   c1_temp	    ;mover W a nuestro valor temporal
+    movf    c1_temp, W	    ;mover esta variable temporal a W
+    movwf   unidad1	    ;moverla a nuestras unidades para operacion
     movwf   unidad4
-    call    division1
+    call    division1	    ;divisiones para los displays 
     call    division4
-    call    prep_display4
-    clrf    unidad4
+    call    prep_display4   ;mostrar nuestro valor en display de config
+    clrf    unidad4	    ;vaciar nuestro display
     return
     
 cambio_S2:
@@ -850,18 +850,19 @@ cambio_S3:
     return
 
 confirmacion:
-    bsf	    tipo_sem, 0	    
-    bsf	    PORTB, 3
-    bsf	    PORTB, 4
+    bsf	    tipo_sem, 0	    ;se inicia nuestro funcionamiento
+    bsf	    PORTB, 3	    ;se enciende los tres leds de config
+    bsf	    PORTB, 4	    ;para mostrar si acepta o rechaza la config actual
     bsf	    PORTB, 5
-    movlw   000111111B  
-    movwf   PORTD
+    movlw   000111111B	    ; Enciendo toda las luces de los semaforos
+    movwf   PORTD	    ;para notificar que se reinicia 
     movlw   000000111B
     movwf   PORTE
-    btfss   PORTB, UP   
-    call    confirmar
-    btfss   PORTB, DOWN
-    call    rechazar
+    btfss   PORTB, UP	    ;se prueba si se preciona PB
+    call    confirmar	    ;se llama nuestra funcion de confirmar
+    btfss   PORTB, DOWN	    ;se prueba si se presiona PB
+    call    rechazar	    ;se llama nuestra funcion de rechazar
     return
 
 END
+
