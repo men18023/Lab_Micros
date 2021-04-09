@@ -5,7 +5,7 @@
 ; Dispositivo:	PIC16F887
 ; Autor:       Jonathan Menendez, 18023
 ; Compilador:  pic-as (v2.30), MBPLABX v5.40
-; Video: 
+; Video: https://youtu.be/wbSrbtDuweg
 ; Enlace Github: https://github.com/men18023/Lab_Micros/tree/main/Proyecto1
 ;**************************
 
