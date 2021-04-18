@@ -1,7 +1,7 @@
 /* Laboratorio 7 - Programacion en C
  * File:   main7.c
  * Author: Jonathan Menendez, 18023
- * Enlace Video:
+ * Enlace Video: https://youtu.be/hxIIvXcpTNI
  * Enlace Github:  https://github.com/men18023/Lab_Micros/tree/main/LAB7
  * Created on 13 de abril de 2021, 11:10 AM
  */
