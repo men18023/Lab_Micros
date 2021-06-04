@@ -1,7 +1,7 @@
 /* Proyecto 2
  * File:   mainP2.c
  * Author: Jonathan Menendez, 18023
- * Enlace Video: 
+ * Enlace Video: https://youtu.be/9SpP8T8vJEA
  * Enlace Github: https://github.com/men18023/Lab_Micros/tree/main/Proyecto2/Commit%20Final
  * Created on 21 de mayo de 2021, 09:02 AM
  */
