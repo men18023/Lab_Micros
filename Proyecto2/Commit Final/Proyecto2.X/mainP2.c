@@ -1,12 +1,12 @@
 /* Proyecto 2
  * File:   mainP2.c
  * Author: Jonathan Menendez, 18023
- * Enlace Video:
- * Enlace Github: 
+ * Enlace Video: 
+ * Enlace Github: https://github.com/men18023/Lab_Micros/tree/main/Proyecto2/Commit%20Final
  * Created on 21 de mayo de 2021, 09:02 AM
  */
 
-//-------------------------- Bits de configuraci”n -----------------------------
+//-------------------------- Bits de configuraci√ìn -----------------------------
 //CONFIG 1
 #pragma config FOSC = INTRC_NOCLKOUT        // Oscillator Selection bits (LP oscillator: Low-power crystal on RA6/OSC2/CLKOUT and RA7/OSC1/CLKIN)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
